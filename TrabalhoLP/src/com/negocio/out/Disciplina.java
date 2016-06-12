@@ -1,19 +1,21 @@
-package com.negocio;
+package com.negocio.out;
 
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 
 @Entity
-public class Curso {
+public class Disciplina {
 	@Id
 	Long id;
 	@Index
 	String nome;
 	
-	public Curso(){}
+	/*Getters e Setters*/
 	
-	public Curso(String nome){
+	public Disciplina(){}
+	
+	public Disciplina(String nome){
 		this.nome = nome;
 	}
 	
