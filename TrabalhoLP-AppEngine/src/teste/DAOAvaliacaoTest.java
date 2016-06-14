@@ -47,6 +47,8 @@ public class DAOAvaliacaoTest {
 		daoAvaliacao.salvaAvaliacao(avaliacao);
 		assertTrue(true);
 		
+		ObjectifyService.begin();
+		ObjectifyService.register(Avaliacao.class);
 		assertTrue(daoAvaliacao.recuperaPorProfessor("000").isEmpty());
 		List<Avaliacao> teste = daoAvaliacao.recuperaPorProfessor("14/000");
 		assertTrue(teste.size() == 1);

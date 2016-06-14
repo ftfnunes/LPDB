@@ -1,0 +1,3 @@
+2016/06/14-11:05:13.199 25910 Reusing MANIFEST /home/fernando/workspace/LPDB/test/Default/IndexedDB/https_www.google.com.br_0.indexeddb.leveldb/MANIFEST-000001
+2016/06/14-11:05:13.199 25910 Recovering log #3
+2016/06/14-11:05:13.199 25910 Reusing old log /home/fernando/workspace/LPDB/test/Default/IndexedDB/https_www.google.com.br_0.indexeddb.leveldb/000003.log 

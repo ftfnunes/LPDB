@@ -10,9 +10,8 @@
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
-	<classpathentry kind="src" path="endpoint-libs/libmessageEndpoint-v1/messageEndpoint/messageendpoint-v1-generated-source"/>
-	<classpathentry kind="src" path="endpoint-libs/libdeviceinfoendpoint-v1/deviceinfoendpoint/deviceinfoendpoint-v1-generated-source"/>
 	<classpathentry exported="true" kind="lib" path="/home/fernando/workspace/LPDB/TrabalhoLP/libs/guava-19.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="/home/fernando/workspace/LPDB/TrabalhoLP/libs/objectify-5.1.13.jar"/>
+	<classpathentry kind="src" path="endpoint-libs/libgradeapi-v1/gradeapi/gradeapi-v1-generated-source"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

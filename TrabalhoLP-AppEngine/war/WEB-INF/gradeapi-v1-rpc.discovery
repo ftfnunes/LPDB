@@ -1,0 +1,239 @@
+{
+ "kind": "discovery#rpcDescription",
+ "etag": "\"zRMgE0l9nVDW4S28VYYcYQF9UW4/MTZ0NOOkPYdAL-RKwKYZIdx8iSc\"",
+ "discoveryVersion": "v1",
+ "id": "gradeapi:v1",
+ "name": "gradeapi",
+ "version": "v1",
+ "description": "API para gerenciar as notas e avaliacoes criadas",
+ "icons": {
+  "x16": "http://www.google.com/images/icons/product/search-16.gif",
+  "x32": "http://www.google.com/images/icons/product/search-32.gif"
+ },
+ "protocol": "rpc",
+ "rootUrl": "https://TrabalhoLP.appspot.com/_ah/api/",
+ "rpcUrl": "https://TrabalhoLP.appspot.com/_ah/api/rpc",
+ "rpcPath": "/_ah/api/rpc",
+ "parameters": {
+  "alt": {
+   "type": "string",
+   "description": "Data format for the response.",
+   "default": "json",
+   "enum": [
+    "json"
+   ],
+   "enumDescriptions": [
+    "Responses with Content-Type of application/json"
+   ],
+   "location": "query"
+  },
+  "fields": {
+   "type": "string",
+   "description": "Selector specifying which fields to include in a partial response.",
+   "location": "query"
+  },
+  "key": {
+   "type": "string",
+   "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+   "location": "query"
+  },
+  "oauth_token": {
+   "type": "string",
+   "description": "OAuth 2.0 token for the current user.",
+   "location": "query"
+  },
+  "prettyPrint": {
+   "type": "boolean",
+   "description": "Returns response with indentations and line breaks.",
+   "default": "true",
+   "location": "query"
+  },
+  "quotaUser": {
+   "type": "string",
+   "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters. Overrides userIp if both are provided.",
+   "location": "query"
+  },
+  "userIp": {
+   "type": "string",
+   "description": "IP address of the site where the request originates. Use this if you want to enforce per-user limits.",
+   "location": "query"
+  }
+ },
+ "auth": {
+  "oauth2": {
+   "scopes": {
+    "https://www.googleapis.com/auth/userinfo.email": {
+     "description": "View your email address"
+    }
+   }
+  }
+ },
+ "schemas": {
+  "Avaliacao": {
+   "id": "Avaliacao",
+   "type": "object",
+   "properties": {
+    "disciplina": {
+     "type": "string"
+    },
+    "gabarito": {
+     "type": "string"
+    },
+    "id": {
+     "type": "string",
+     "format": "int64"
+    },
+    "matriculaProfessor": {
+     "type": "string"
+    },
+    "nome": {
+     "type": "string"
+    },
+    "temFator": {
+     "type": "boolean"
+    },
+    "valor": {
+     "type": "number",
+     "format": "float"
+    }
+   }
+  },
+  "AvaliacaoCollection": {
+   "id": "AvaliacaoCollection",
+   "type": "object",
+   "properties": {
+    "items": {
+     "type": "array",
+     "items": {
+      "$ref": "Avaliacao"
+     }
+    }
+   }
+  },
+  "Nota": {
+   "id": "Nota",
+   "type": "object",
+   "properties": {
+    "avaliacao": {
+     "$ref": "Avaliacao"
+    },
+    "id": {
+     "type": "string",
+     "format": "int64"
+    },
+    "matriculaAluno": {
+     "type": "string"
+    },
+    "pontuacao": {
+     "type": "number",
+     "format": "float"
+    },
+    "respostas": {
+     "type": "string"
+    }
+   }
+  },
+  "NotaCollection": {
+   "id": "NotaCollection",
+   "type": "object",
+   "properties": {
+    "items": {
+     "type": "array",
+     "items": {
+      "$ref": "Nota"
+     }
+    }
+   }
+  }
+ },
+ "methods": {
+  "gradeapi.addAvaliacao": {
+   "id": "gradeapi.addAvaliacao",
+   "parameters": {
+    "resource": {
+     "$ref": "Avaliacao"
+    }
+   },
+   "parameterOrder": [
+    "resource"
+   ],
+   "returns": {
+    "$ref": "Avaliacao"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "gradeapi.addNota": {
+   "id": "gradeapi.addNota",
+   "parameters": {
+    "resource": {
+     "$ref": "Nota"
+    }
+   },
+   "parameterOrder": [
+    "resource"
+   ],
+   "returns": {
+    "$ref": "Nota"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "gradeapi.listAvaliacoes": {
+   "id": "gradeapi.listAvaliacoes",
+   "parameters": {
+    "matriculaProf": {
+     "type": "string",
+     "required": true
+    }
+   },
+   "parameterOrder": [
+    "matriculaProf"
+   ],
+   "returns": {
+    "$ref": "AvaliacaoCollection"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "gradeapi.listNotas": {
+   "id": "gradeapi.listNotas",
+   "parameters": {
+    "matriculaAluno": {
+     "type": "string",
+     "required": true
+    }
+   },
+   "parameterOrder": [
+    "matriculaAluno"
+   ],
+   "returns": {
+    "$ref": "NotaCollection"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "gradeapi.listNotasPorProf": {
+   "id": "gradeapi.listNotasPorProf",
+   "parameters": {
+    "matriculaProf": {
+     "type": "string",
+     "required": true
+    }
+   },
+   "parameterOrder": [
+    "matriculaProf"
+   ],
+   "returns": {
+    "$ref": "NotaCollection"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  }
+ }
+}

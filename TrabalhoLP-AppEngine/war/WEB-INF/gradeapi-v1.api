@@ -1,0 +1,238 @@
+{
+  "extends" : "thirdParty.api",
+  "abstract" : false,
+  "root" : "https://TrabalhoLP.appspot.com/_ah/api",
+  "name" : "gradeapi",
+  "version" : "v1",
+  "description" : "API para gerenciar as notas e avaliacoes criadas",
+  "defaultVersion" : false,
+  "discovery" : [ "PUBLIC" ],
+  "adapter" : {
+    "bns" : "https://TrabalhoLP.appspot.com/_ah/spi",
+    "deadline" : 65.0,
+    "type" : "lily"
+  },
+  "auth" : {
+    "allowCookieAuth" : false
+  },
+  "frontendLimits" : {
+    "unregisteredUserQps" : -1,
+    "unregisteredQps" : -1,
+    "unregisteredDaily" : -1,
+    "rules" : [ ]
+  },
+  "cacheControl" : {
+    "type" : "no-cache",
+    "maxAge" : 0
+  },
+  "methods" : {
+    "gradeapi.addNota" : {
+      "path" : "salvaNotas",
+      "httpMethod" : "POST",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "com.trabalholp.servico.TrabalhoaLPAPI.salvaNotas",
+      "request" : {
+        "body" : "autoTemplate(backendRequest)",
+        "bodyName" : "resource"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "gradeapi.addAvaliacao" : {
+      "path" : "salvaAvaliacao",
+      "httpMethod" : "POST",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "com.trabalholp.servico.TrabalhoaLPAPI.salvaAvaliacao",
+      "request" : {
+        "body" : "autoTemplate(backendRequest)",
+        "bodyName" : "resource"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "gradeapi.listAvaliacoes" : {
+      "path" : "recuperaAvaliacoes/{matriculaProf}",
+      "httpMethod" : "POST",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "com.trabalholp.servico.TrabalhoaLPAPI.recuperaAvaliacoes",
+      "request" : {
+        "parameters" : {
+          "matriculaProf" : {
+            "type" : "string",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "gradeapi.listNotas" : {
+      "path" : "recuperaNotas/{matriculaAluno}",
+      "httpMethod" : "POST",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "com.trabalholp.servico.TrabalhoaLPAPI.recuperaNotas",
+      "request" : {
+        "parameters" : {
+          "matriculaAluno" : {
+            "type" : "string",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    },
+    "gradeapi.listNotasPorProf" : {
+      "path" : "recuperaNotasPorProf/{matriculaProf}",
+      "httpMethod" : "POST",
+      "authLevel" : "NONE",
+      "scopes" : [ "https://www.googleapis.com/auth/userinfo.email" ],
+      "audiences" : [ ],
+      "clientIds" : [ "292824132082.apps.googleusercontent.com" ],
+      "rosyMethod" : "com.trabalholp.servico.TrabalhoaLPAPI.recuperaNotasPorProf",
+      "request" : {
+        "parameters" : {
+          "matriculaProf" : {
+            "type" : "string",
+            "required" : true
+          }
+        },
+        "body" : "empty"
+      },
+      "response" : {
+        "body" : "autoTemplate(backendResponse)"
+      }
+    }
+  },
+  "descriptor" : {
+    "schemas" : {
+      "Nota" : {
+        "id" : "Nota",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "int64"
+          },
+          "matriculaAluno" : {
+            "type" : "string"
+          },
+          "pontuacao" : {
+            "type" : "number",
+            "format" : "float"
+          },
+          "avaliacao" : {
+            "$ref" : "Avaliacao"
+          },
+          "respostas" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Avaliacao" : {
+        "id" : "Avaliacao",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "int64"
+          },
+          "matriculaProfessor" : {
+            "type" : "string"
+          },
+          "disciplina" : {
+            "type" : "string"
+          },
+          "nome" : {
+            "type" : "string"
+          },
+          "gabarito" : {
+            "type" : "string"
+          },
+          "temFator" : {
+            "type" : "boolean"
+          },
+          "valor" : {
+            "type" : "number",
+            "format" : "float"
+          }
+        }
+      },
+      "AvaliacaoCollection" : {
+        "id" : "AvaliacaoCollection",
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "Avaliacao"
+            }
+          }
+        }
+      },
+      "NotaCollection" : {
+        "id" : "NotaCollection",
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "Nota"
+            }
+          }
+        }
+      }
+    },
+    "methods" : {
+      "com.trabalholp.servico.TrabalhoaLPAPI.salvaNotas" : {
+        "request" : {
+          "$ref" : "Nota"
+        },
+        "response" : {
+          "$ref" : "Nota"
+        }
+      },
+      "com.trabalholp.servico.TrabalhoaLPAPI.salvaAvaliacao" : {
+        "request" : {
+          "$ref" : "Avaliacao"
+        },
+        "response" : {
+          "$ref" : "Avaliacao"
+        }
+      },
+      "com.trabalholp.servico.TrabalhoaLPAPI.recuperaAvaliacoes" : {
+        "response" : {
+          "$ref" : "AvaliacaoCollection"
+        }
+      },
+      "com.trabalholp.servico.TrabalhoaLPAPI.recuperaNotas" : {
+        "response" : {
+          "$ref" : "NotaCollection"
+        }
+      },
+      "com.trabalholp.servico.TrabalhoaLPAPI.recuperaNotasPorProf" : {
+        "response" : {
+          "$ref" : "NotaCollection"
+        }
+      }
+    }
+  }
+}

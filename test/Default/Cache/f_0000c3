@@ -1,0 +1,1163 @@
+
+yzoom.tools = {};
+yzoom.widget = {};
+
+/**
+ * @method yzoom.tools.getIntByPixels
+ *
+ * Recebe um valor em pixels e extrai a parte inteira.
+ * Exemplo:
+ *  getIntByPixels("25px") retornará 25.
+ *
+ *
+ * @param string val Valor em pixel. Ex: 25px
+ * @return int Valor em inteiro.
+ */
+function getIntByPixels (val)
+{
+	return parseInt( val.substring(0, val.lastIndexOf('p')) );
+}
+yzoom.tools.getIntByPixels = getIntByPixels;
+
+function frmSetDefaultValue (cssSelector)
+{
+	$(cssSelector).blur(function() {
+		if(jQuery.trim(this.value) == "") {
+			this.value = this.title;	
+		}
+	});
+	
+	$(cssSelector).focus(function() {
+		if(jQuery.trim(this.value) == this.title) {
+			this.value = "";	
+		}
+	});
+	
+}
+yzoom.tools.frmSetDefaultValue = frmSetDefaultValue;
+
+
+// Strip HTML Tags (form) script- By JavaScriptKit.com (http://www.javascriptkit.com)
+// For this and over 400+ free scripts, visit JavaScript Kit- http://www.javascriptkit.com/
+// This notice must stay intact for use
+function stripHTML (str)
+{
+	return str.replace(/(<([^>]+)>)/ig,"");
+}
+
+yzoom.tools.stripHTML = stripHTML;
+
+function delay (millis) 
+{
+	var date = new Date();
+	var curDate = null;
+		
+	do {curDate = new Date();} 
+	while(curDate-date < millis);
+} 
+
+yzoom.tools.delay = delay;
+
+/**
+ * Método que cuida do ajuste da barra verde presente nos titulos delimitadores
+ * de secao
+ */
+function tituloVerde ()
+{
+	var CHAR_W = 9;
+	var itens = $('.titulo-verde');
+	var l = itens.length;
+	
+	var $this, $span, w;
+	
+	for (var i=0; i<l; i++)
+	{
+		$this = itens.eq(i);
+		$span = $this.children('span.bar');
+
+		w = $this.width() - ((yzoom.tools.stripHTML($this.html()).length * CHAR_W) + 15);
+		
+		if ($this.hasClass('adicionar-folga')) w = parseInt(w) - 30;
+		
+		$span.css('width', w + "px");
+	}
+}
+
+yzoom.widget.tituloVerde = tituloVerde;
+
+function initDownloadController ()
+{
+    var downloadList = $('ul.lista-download a.bt-download');
+
+    downloadList.each(function() {
+
+        $(this).click(function() {
+
+            var srcIframe = '/_ajax/read_download.php?c='+this.name;
+            var iframeCatalogo = null;
+
+            try {
+
+                iframeCatalogo = document.getElementById("downloadArquivo");
+                iframeCatalogo.src = srcIframe;
+
+            } catch(e) {
+
+                iframeCatalogo = document.createElement('iframe');
+                iframeCatalogo.setAttribute('style','visibility:hidden');
+                iframeCatalogo.setAttribute('width','1');
+                iframeCatalogo.setAttribute('height','1');
+                iframeCatalogo.setAttribute('id','downloadArquivo');
+
+                document.getElementById('container-rodape').appendChild(iframeCatalogo);
+                iframeCatalogo.contentWindow.document.open();
+
+                iframeCatalogo.setAttribute('src', srcIframe);
+            }
+
+
+            //x.contentWindow.document.open();
+            //x.contentWindow.document.write(html);
+            //x.contentWindow.document.close();
+
+            return false;
+
+        });
+
+   });
+}
+
+yzoom.widget.initDownloadController = initDownloadController;
+
+
+yzoom.widget.Player = function (containerCssSelector)
+{
+	var container = $(containerCssSelector);
+	var player =
+	{
+		ITEM_WIDTH: 510,
+		INTERVAL: 5000,
+		LETRERO_MAX_LENGTH: 86,
+		last: 1,
+		current: 1,
+		timeout: null,
+		container: container,
+		stage: container.find('.yzoom-player-stage'),
+		lista: container.find('.yzoom-player-lista-imgs'),
+		itens: container.find('.yzoom-player-lista-imgs').children('li'),
+		letrero: container.find('.yzoom-player-letrero'),
+		letreroPagina: container.find('.yzoom-player-letrero-pagina'),
+		// controle: $('#player-paginas'),
+		btForward: container.find('.yzoom-player-bt-forward'),
+		btBackward: container.find('.yzoom-player-bt-backward')
+		// itensControle: null
+	};
+	
+	
+	if (!player.itens.length) 
+	{
+		player.container.remove();
+		return false; 
+	}
+	
+	// player.itens.eq(0).find('img').ready(function () { player.loader.remove(); });
+	
+	$(document).ready(function ()
+	{
+		player.letrero.show();
+		// buildControlador();
+		setPlayer();
+				
+		return;
+	});
+	
+	
+	function setPlayer ()
+	{
+		// Caso houver apenas um slide, adota uma postura diferente,
+		// não configura o player, e exibe o titulo do item no letrero do player
+		if (player.itens.length == 1)
+		{
+			player.letrero.text(player.itens.eq(0).find('img').attr('alt'));
+			player.btForward.hide();
+			player.btBackward.hide();
+			
+			return false;
+		}
+	
+		player.lista.css('width', parseInt(player.itens.length * player.ITEM_WIDTH) + 'px');
+		// player.itensControle.click(handleClick);
+		
+		player.btForward.click(showNext);
+		player.btBackward.click(showPrev);
+		
+		
+		show(1);
+
+		return;
+	}
+	
+	function buildControlador ()
+	{
+		// Caso não haja slides, não construirá o controlador,
+		// mas exibirá o titulo do item unico no letrero
+		if (player.itens.length == 1)
+		{
+			player.letrero.text(player.itens.eq(0).find('img').attr('alt'));
+			return false;
+		}
+		
+		var html, title, i;
+		
+		html = "";
+		
+		for (var i=0; i<player.itens.length; i++)
+		{
+			title = player.itens.eq(i).find('img').attr('alt');
+			title = getTituloParaLetrero(title);
+			
+			html += '<a class="pag wgt" rel="'+parseInt(i+1)+'" title="'+ title +'"></a>';
+		}
+		
+		
+		player.controle.html(html);
+		player.itensControle = player.controle.children('a');
+		
+		player.controle.css('width', parseInt(i * (player.itensControle.width() + 3) + 3) + 'px');
+		
+		return;
+	}
+
+	function handleClick ()
+	{
+		var i, $this;
+		
+		$this = $(this);
+		i = parseInt($this.attr('rel'));
+		
+		show(i);
+		
+		return false;
+	}
+	
+	function showNext ()
+	{
+		unsetTimeOut();
+		
+		if (player.current == player.itens.length)
+		{
+			player.current = 1;
+		}
+		else
+		{
+			player.current++;
+		}
+		
+		show(player.current);	
+		
+		return false;
+	}
+	
+	function showPrev ()
+	{
+		unsetTimeOut();
+		
+		if (player.current == 1)
+		{
+			player.current = player.itens.length;
+		}
+		else
+		{
+			player.current--;
+		}
+		
+		show(player.current);	
+		
+		return false;
+	}
+	
+	function show (i)
+	{
+		player.letreroPagina.html(i + "/" + player.itens.length);
+		unsetTimeOut();
+		bloquearBts();
+		
+		var left;
+		var item;
+	
+		player.current = i;
+		i--;
+		
+		left = parseInt(player.ITEM_WIDTH * i);
+		
+		// player.itensControle.removeClass('ativa');
+		// item = player.itensControle.eq(i);
+		
+		// item.addClass('ativa');
+		player.letrero.text(player.itens.eq(i).find('img').attr('alt'));
+
+
+		// player.lista.animate({left: '-' + Math.abs(left+4) + 'px'}, 300);
+		player.lista.animate({left: '-' + Math.abs(left) + 'px'}, 300, liberarBts);
+
+		setTimeOut();
+		
+		return;
+	}
+	
+	function bloquearBts ()
+	{
+		player.btForward.unbind('click');
+		player.btBackward.unbind('click');
+	}
+	
+	function liberarBts ()
+	{
+		player.btForward.click(showNext);
+		player.btBackward.click(showPrev);
+	}
+	
+	function setTimeOut ()
+	{
+		player.timeout = setTimeout(showNext, player.INTERVAL);
+		return;
+	}
+	
+	function unsetTimeOut ()
+	{
+		clearTimeout(player.timeout);
+		return;
+	}
+	
+	function getTituloParaLetrero (str)
+	{
+		return yzoom.tools.limitarTexto(str, player.LETRERO_MAX_LENGTH);
+	}
+	
+	return this;
+}
+
+yzoom.widget.initIndexPlayer = function ()
+{
+	var p = new yzoom.widget.Player("#container-index-player");
+}
+
+yzoom.widget.Calendario = function ()
+{
+	calendario = {};
+	
+	calendario.tabela = $('table.yzoom-calendario-tabela');
+	calendario.destaques = calendario.tabela.find('.destaque');
+	
+	setCache();
+	
+	calendario.destaques.mouseover(handleMouseOver).mouseleave(handleMouseLeave);
+	
+	function setCache ()
+	{
+		var destaques = calendario.destaques;
+		var l = destaques.length;
+		var item, tooltip;
+		
+		for (var i=0; i<l; i++)
+		{
+			item = destaques.eq(i);
+			
+			tooltip = item.children("div.yzoom-calendario-tooltip").hide();
+			item.data("tooltip", tooltip);
+			item.data("tooltipAtivo", false);
+		}
+	}
+	
+	function handleMouseOver ()
+	{
+		var $this = $(this);
+		$this.data("tooltipAtivo", true);
+
+		setTimeout(function () {
+			if (!$this.data("tooltipAtivo")) return;
+		
+			$this.data("tooltip").fadeIn();
+		}, 220);
+
+	}
+	
+	function handleMouseLeave ()
+	{
+		var $this = $(this);
+		$this.data("tooltipAtivo", false);
+		
+		setTimeout(function ()
+		{
+			if ($this.data("tooltipAtivo")) return false;
+
+			$this.data("tooltip").fadeOut();
+		}, 220);
+	}
+}
+
+/**
+ * O objeto slider, que cuida do player de apresentação 
+ * das notícias relacionadas
+ *
+ * @param Object $container O container do slide em questao
+ * @param Object config O Objeto configuracao (parametro opcional)
+ */
+yzoom.widget.Slider = function ($container, config)
+{
+	config = config || {}; 
+	
+	var settings =
+	{
+		ITEM_HEIGTH: 60,
+		nPERPAGE: 5,
+		speed: 700,
+        PAGINA_INICIAL: 1
+	};
+	
+	settings = $.extend(settings, config);
+	
+	var elementos =
+	{
+		container: $container,
+		itens: null,
+		btUp: null, // $('#yzoom-slider-btup a'),
+		btDown: null,// $('#yzoom-slider-down a'),
+		lista: null, // $('#yzoom-slider-lista'),
+		top: 0,
+		bottom: 4
+	};
+	
+	var toup, offset, dif, $this, titulo, texto, autor, h, h2, topv;
+	
+	/**
+	 * Método responsavel ajustar todos os itens  da lista do slider.
+	 */
+	function fix ()
+	{
+		return;
+	}
+	
+	/**
+	 * Responsável rolar a lista para baixo
+	 */
+	function down ()
+	{
+		if (elementos.top == 0) return false;
+		
+		elementos.top = parseInt(elementos.top - settings.nPERPAGE);
+
+		if (elementos.top < 0)
+		{
+			elementos.btUp.parent().addClass('fade');
+			elementos.top = 0;
+		}
+		
+		elementos.btDown.parent().removeClass('fade');
+		
+		elementos.bottom = parseInt(elementos.top + settings.nPERPAGE);
+		
+		toup = parseInt(settings.ITEM_HEIGTH * elementos.top);
+		
+		if (toup == 0)
+			topv = "0px";
+		else
+			topv = "-" + toup + "px";
+
+		elementos.lista.animate({top: '-' + parseInt(toup+2) + 'px'}, settings.speed);
+		elementos.lista.animate({top: topv}, 20);
+
+		return false;
+	}
+	
+	/**
+	 * Responsável rolar a lista para cima
+	 */
+	function up ()
+	{
+		if (elementos.bottom == elementos.itens.length) return false;
+		
+		elementos.bottom = parseInt(elementos.bottom + settings.nPERPAGE);
+		dif = parseInt(elementos.itens.length - elementos.bottom);
+	
+		if (dif < 0)
+		{
+			elementos.btDown.parent().addClass('fade');
+			elementos.bottom = parseInt(elementos.bottom + dif);
+		}
+		
+		elementos.btUp.parent().removeClass('fade');
+
+		elementos.top = elementos.bottom - settings.nPERPAGE;
+		
+		toup = parseInt(settings.ITEM_HEIGTH * elementos.top);
+		
+		if (toup == 0)
+			topv = "0px";
+		else
+			topv = "-" + toup + "px";
+		
+		elementos.lista.animate({top: '-' + parseInt(toup+2) + 'px'}, settings.speed);
+		elementos.lista.animate({top: topv}, 20);
+			
+		return false;
+	}
+	
+	function init ()
+	{
+		elementos.btUp = elementos.container.find('.yzoom-slider-video-btup > a');
+		elementos.btDown = elementos.container.find('.yzoom-slider-video-btdown > a');
+		elementos.lista = elementos.container.find('.yzoom-slider-video-lista');
+		elementos.itens = elementos.lista.children('.item');
+		
+		// elementos.itens.each(fix);
+		
+		if (elementos.itens.length < settings.nPERPAGE)
+		{
+			elementos.btUp.parent().addClass('fade');
+			elementos.btDown.parent().addClass('fade');
+		}
+		
+		elementos.top = 0;
+		elementos.bottom = settings.nPERPAGE;
+
+		elementos.btUp.click(down);
+		elementos.btDown.click(up);
+        
+        if(settings.PAGINA_INICIAL > 1){
+            for (i=1; i < settings.PAGINA_INICIAL; i++) {
+                up();
+            }
+        }
+		
+		elementos.btUp.parent().addClass('fade');
+	}
+
+	init();
+	
+	return;
+}
+
+yzoom.widget.PaginacaoController = function ($settings)
+{
+	var controller = {url:null, urlSemCategoria:null};
+	var elementos = {};
+
+	$settings = $settings || {};
+
+	controller = $.extend(controller, $settings);
+
+	elementos.form = $("#paginacao-controller-form");
+	elementos.container = $('div.js-form-filtro');
+	var container = elementos.container ;
+
+	elementos.selects = container.find('select');
+	elementos.inputs = container.find('input');
+	elementos.bts = container.find('button');
+
+	elementos.paginacao = {};
+	elementos.paginacao.container = $('div.box-paginacao');
+	container = elementos.paginacao.container;
+
+	elementos.paginacao.inputPagina =$('#pag');
+
+    //Inicio Pagina��o
+    var paginacaoList = $('a');
+    paginacaoList.each(function() {$(this).click(function() {setPageSubmit(parseInt($(this).attr('rel')));})});
+
+    function setPageSubmit(pag_num){
+       elementos.paginacao.inputPagina.attr('value',pag_num);
+       submit();
+    }
+    // Fim Pagina��o
+
+	elementos.selects.each(getSelectDefaultValue);
+	elementos.inputs.each(getDefaultValue);
+
+	elementos.inputs.keydown(handleInputKeyDown);
+	elementos.selects.change(function (){submit()});
+	elementos.bts.click( function (){submit()});
+	elementos.paginacao.inputPagina.keydown(handleInputKeyDown);
+
+	yzoom.tools.frmSetDefaultValue('.js-form-filtro input');
+
+	function getSelectDefaultValue ()
+	{
+		var $this = $(this);
+		$this.data('defaultValue', $this.children().eq(0).val());
+		// $this.data('defaultValue', $this.find(":selected").attr('value'));
+	}
+
+	function getDefaultValue ()
+	{
+		var $this = $(this);
+		$this.data('defaultValue', $this.attr('title'));
+	}
+
+	function handleSelectChange (e)
+	{
+	}
+
+	function handleInputKeyDown (e)
+	{
+		if (e.keyCode == 13)
+		{
+  			submit();
+  		}
+	}
+
+	function getSelectsValues ()
+	{
+		var values = new Array();
+
+		var length = elementos.selects.length;
+		var selects = elementos.selects;
+		var item;
+
+		for (var i=0; i<length; i++)
+		{
+			item = selects.eq(i);
+			if (item.val() != item.data("defaultValue"))
+				values.push({name: item.attr('name'), value: item.val()});
+		}
+
+		return values;
+	}
+
+	function getInputsValue ()
+	{
+		var values = new Array();
+
+		var inputs = elementos.inputs;
+		var length = inputs.length;
+
+		var item;
+
+		for (var i=0; i<length; i++)
+		{
+            
+			item = inputs.eq(i);
+
+			if (item.val() != item.data("defaultValue"))
+				values.push({name: item.attr('name'), value: item.val()});
+		}
+
+		return values;
+	}
+
+	function getPagina ()
+	{
+		var val = elementos.paginacao.inputPagina.val();
+
+        val = parseInt(val);
+        if (isNaN(val) || (val<=0)) val = 1;
+
+		var v = {};
+		v.value = val;
+		v.name = elementos.paginacao.inputPagina.attr('name');
+
+		return [v];
+	}
+
+	function submit ()
+	{
+		var filtro = new Array();
+
+        filtro = filtro.concat(getSelectsValues(), getInputsValue(), getPagina());
+
+        var length = filtro.length;
+		var html = "";
+		var item;
+		
+		for (var i=0; i<length; i++)
+		{
+            item = filtro.pop();
+            
+            html += '<input type="hidden" name="'+item.name+'" value="'+item.value+'"/>';
+		}
+
+
+		elementos.form.html(html);
+        
+		elementos.form.attr('action', controller.url);
+		elementos.form.get(0).submit();
+
+	}
+}
+
+
+yzoom.widget.NoticiaPlayerController = function ()
+{
+    var boxPlayer = $("#box-player-index");
+    var itens = $("#box-player-index .item");
+    var boxImagem = $("#box-player-index .box-player-box-img");
+    var boxTexto = $("#box-player-index .box-player-box-txt");
+    var slideInterval;
+    var indiceAtual = 1;
+    var totalNoticia = itens.length;
+    var slideInterval;
+
+
+    function trocar(){
+
+        boxImagem.each(function(){
+            $(this).hide();
+        });
+        boxTexto.each(function(){
+            $(this).hide();
+        });
+
+        if(indiceAtual == 3){
+            $("#box-player-index .midle").removeClass('no-bg');
+        }else{
+            $("#box-player-index .midle").addClass('no-bg');
+        }
+
+        itens.each(function(){
+            $(this).removeClass('item-ativo');
+        })
+        $("#box-player-index #not-item-player"+indiceAtual).addClass('item-ativo');
+
+        $("#not-img-player"+indiceAtual).show();
+        $("#not-txt-player"+indiceAtual).show();
+
+        if(indiceAtual < totalNoticia){
+            indiceAtual++;
+        }else{
+            indiceAtual=1;
+        }
+        
+        
+    }
+
+    itens.click(function(){
+
+        indiceAtual = $(this).children('h4').children('a').attr('rel');
+        trocar();
+        clearInterval(slideInterval);
+        slideInterval = setInterval(trocar, 9000);
+
+    });
+
+
+    function iniciar(){
+
+        boxImagem.each(function(){
+            $(this).hide();
+        });
+        boxTexto.each(function(){
+            $(this).hide();
+        });
+
+        $("#not-img-player1").show();
+        $("#not-txt-player1").show();
+
+        if(indiceAtual < totalNoticia){
+            indiceAtual++;
+        }else{
+            indiceAtual=1;
+        }
+        slideInterval = setInterval(trocar, 9000);
+
+    }
+    
+    iniciar();
+
+}
+
+
+
+// Galeria Controller
+
+    var galeriaImagemAvailableList = Array();
+    var galeriaImagemLoadedList = Array();
+    var galeriaImagemIndexMin = 0;
+    var galeriaImagemIndexMax = 0;
+
+    var galeriaImagemIndexDisplayedStart = 0;
+    var galeriaImagemIndexDisplayedEnd = 0;
+
+    var galeriaImagemMaxThumbs = 5; // m�ximo exibido
+    var galeriaImagemIndexCurrent = 0;
+
+    var galeriaImagemPanelThumbs = "#lista-imagens-player-galeria";
+    var galeriaImagemButtonNextThumb = "#bt-forward";
+    var galeriaImagemButtonPrevThumb = "#bt-back";
+    //var galeriaImagemPainelInfoFoto = "#infoFoto";
+
+    var objGaleriaImagemPanelThumbs;
+    //var objGaleriaImagemPainelInfoFoto;
+
+yzoom.widget.GaleriaController = function (gal_id)
+{
+
+	objGaleriaImagemPanelThumbs = $(galeriaImagemPanelThumbs);
+	//objGaleriaImagemPainelInfoFoto = $(galeriaImagemPainelInfoFoto);
+
+	var ajaxURL = "/_ajax/list_thumbs_galeria_imagem.php?gal_id="+gal_id;
+
+	$.getJSON(ajaxURL, function(jsonReturn) {
+
+		if(jsonReturn.status == "sucesso") {
+
+			galeriaImagemAvailableList = jsonReturn.galeriaImagemList;
+			galeriaImagemIndexMax = jsonReturn.galeriaImagemList.length - 1;
+
+			for(var im = 0; im < galeriaImagemMaxThumbs && im < galeriaImagemIndexMax; im++)
+			{
+				//objGaleriaImagemPanelThumbs.append('<li id="'+im+'gi"><a  name="'+galeriaImagemAvailableList[im][1]+'"><img src="/thumb_galeria.php?img='+galeriaImagemAvailableList[im][1]+'&id='+gal_id+'&w=128&h=97&cropratio=4:3" width="128" height="97" /></a></li>');
+                objGaleriaImagemPanelThumbs.append('<li class="item" id="'+im+'gi"><a class="polaroid png" name="'+galeriaImagemAvailableList[im][1]+'"><img class="img" src="/thumb_galeria.php?img='+galeriaImagemAvailableList[im][1]+'&id='+gal_id+'&w=74&h=54" width="74" height="54" alt="" title="" /></a></li>');
+				galeriaImagemLoadedList[im] = $('#'+im+'gi');
+			}
+
+			galeriaImagemIndexDisplayedEnd = im - 1;
+		}
+	});
+
+
+	$('#palco-player-galeria').css("width", "725px");
+	$('#palco-player-galeria').css("height", "382px");
+
+	$(galeriaImagemButtonNextThumb).click(function() {
+
+		nextThumbGaleriaImagem();
+
+		return false;
+
+	})
+
+	$(galeriaImagemButtonPrevThumb).click(function() {
+
+		prevThumbGaleriaImagem();
+
+		return false;
+
+	})
+
+	showLoading();
+    hideLoading();
+
+	$(function() {
+
+		$(galeriaImagemPanelThumbs + ' a').live('click', function() {
+
+			$('#palco-player-galeria').html('<a class="bt-polaroid-grande png"><img class="img-polaroid" src="/thumb_galeria.php?img='+ $(this).attr('name') +'&id='+gal_id+'&w=465&h=347&q=high" onload="hideLoading()"width="465" height="347" id="imgMasterView" /></a>');
+
+			showLoading();
+
+			galeriaImagemIndexCurrent = parseInt($(this).parent().attr('id').replace("gi", ""));
+
+			$("#lista-imagens-player-galeria li.item").removeClass("item-ativo");
+			$(this).parent().addClass('item-ativo');
+
+			return false;
+		});
+	});
+
+
+function nextThumbGaleriaImagem() {
+
+	if(galeriaImagemIndexDisplayedEnd < galeriaImagemIndexMax)
+	{
+		galeriaImagemLoadedList[galeriaImagemIndexDisplayedStart].hide('slow');
+
+		galeriaImagemIndexDisplayedStart++;
+		galeriaImagemIndexDisplayedEnd++;
+
+		if(galeriaImagemLoadedList.length < galeriaImagemAvailableList.length)
+		{
+			var im = galeriaImagemIndexDisplayedEnd;
+
+			objGaleriaImagemPanelThumbs.append('<li class="item" id="'+im+'gi"><a class="polaroid png" name="'+galeriaImagemAvailableList[im][1]+'"><img class="img" src="/thumb_galeria.php?img='+galeriaImagemAvailableList[im][1]+'&id='+gal_id+'&w=74&h=54" width="74" height="54" alt="" title="" /></a></li> ');
+            //<li id="'+im+'gi"><a name="'+galeriaImagemAvailableList[im][1]+'"><img src="/thumb_galeria.php?img='+galeriaImagemAvailableList[im][1]+'&id='+galeriaId+'&w=128&h=97&cropratio=4:3" width="128" height="97" /></a></li>');
+
+            galeriaImagemLoadedList[im] = $('#'+im+'gi');
+			galeriaImagemLoadedList[im].hide();
+			galeriaImagemLoadedList[im].show('slow');
+
+			// galeriaImagemLoadedList[im]
+		} else {
+			galeriaImagemLoadedList[galeriaImagemIndexDisplayedEnd].hide();
+			galeriaImagemLoadedList[galeriaImagemIndexDisplayedEnd].show('slow');
+		}
+
+		if(galeriaImagemIndexDisplayedEnd == galeriaImagemIndexMax) {
+		   $(this).removeAttr("href");
+		}
+	}
+}
+
+function prevThumbGaleriaImagem() {
+
+	if(galeriaImagemIndexDisplayedStart > 0)
+	{
+		galeriaImagemLoadedList[galeriaImagemIndexDisplayedEnd--].hide('slow');
+		galeriaImagemLoadedList[--galeriaImagemIndexDisplayedStart].show('slow');
+
+
+		if(galeriaImagemIndexDisplayedStart == 0) {
+
+			$(this).removeAttr("href");
+		}
+	}
+}
+
+}
+
+
+function hideLoading() {
+
+	$("#imgMasterLoad").hide();
+	$("#img-polaroid").show();
+	$("#palco-player-galeria").stop().animate({opacity: 1.0}, 500);
+}
+
+function showLoading() {
+
+
+	$("#img-polaroid").hide();
+	$("#palco-player-galeria").stop().animate({opacity: 0.6}, 500);
+	$("#palco-player-galeria").append('<div style="margin: -220px; margin-left:280px; position: absolute; text-align: center;" id="imgMasterLoad"><img src="/_imagens/loading-ajax.gif" width="160" height="24" alt="Carregando..." title="Carregando..." /></div>');
+
+}
+
+
+
+// FIM Galeria Controller
+
+
+yzoom.widget.AnuarioController = function () {
+
+    var anuarioList = $('ul.lista-anuario a.link-download');
+
+    anuarioList.each(function() {
+
+        $(this).click(function() {
+
+            var srcIframe = '/_ajax/read_file.php?fn='+this.name+'&t=x';
+            var iframeAnuario = null;
+
+            try {
+
+                iframeAnuario = document.getElementById("iframeAnuarioDownload");
+                iframeAnuario.src = srcIframe;
+
+            } catch(e) {
+
+                iframeAnuario = document.createElement('iframe');
+                iframeAnuario.setAttribute('style','visibility:hidden');
+                iframeAnuario.setAttribute('width','1');
+                iframeAnuario.setAttribute('height','1');
+                iframeAnuario.setAttribute('id','iframeAnuarioDownload');
+
+                document.getElementById('container-rodape').appendChild(iframeAnuario);
+                iframeAnuario.contentWindow.document.open();
+
+                iframeAnuario.setAttribute('src', srcIframe);
+            }
+
+
+            //x.contentWindow.document.open();
+            //x.contentWindow.document.write(html);
+            //x.contentWindow.document.close();
+
+            return false;
+
+        });
+
+    });
+}
+
+yzoom.widget.AreaRestritaCurriculosController = function () {
+
+    var curriculoList = $('ul.lista-texto a.btzin-download');
+
+    curriculoList.each(function() {
+
+        $(this).click(function() {
+
+            var srcIframe = '/_ajax/read_file.php?fn='+this.name+'&t=x&type=curriculos';
+            var iframeCurriculo = null;
+
+            try {
+
+                iframeCurriculo = document.getElementById("iframeCurriculo");
+                iframeCurriculo.src = srcIframe;
+
+            } catch(e) {
+
+                iframeCurriculo = document.createElement('iframe');
+                iframeCurriculo.setAttribute('style','visibility:hidden');
+                iframeCurriculo.setAttribute('width','1');
+                iframeCurriculo.setAttribute('height','1');
+                iframeCurriculo.setAttribute('id','iframeCurriculo');
+
+                document.getElementById('container-rodape').appendChild(iframeCurriculo);
+                iframeCurriculo.contentWindow.document.open();
+
+                iframeCurriculo.setAttribute('src', srcIframe);
+            }
+            return false;
+        });
+    });
+}
+
+
+function showGoogleMaps() {
+   $.fn.colorbox({href: '/onde-estamos', width:"711px", height:"537px", iframe:true});
+   return false;
+}
+yzoom.widget.showGoogleMaps = showGoogleMaps;
+
+
+function initMailingController ()
+{
+    var btAbreMail = $('.btAbreMail');
+    var btMail = '';
+    var inputNome = '';
+    var inputMail = '';
+    var recinputNome = '';
+    var recinputMail = '';
+    var color = '';
+
+    $(btAbreMail).click(function() {
+        abreFormulario();
+    });
+
+    function abreFormulario(){
+        $.fn.colorbox({
+            html:'<div class="box-conteudo-tipo1">'+
+            '<div class="box-titulo">'+
+                '<h2 class="titulo-klavika titulo-klavika-index titulo-klavika-index-newsletter png">Newsletter</h2>'+
+                '<span class="png titulo-corner titulo-corner-left"></span>'+
+                '<span class="png titulo-corner titulo-corner-right"></span>'+
+                '<span class="icone png icone-titulo-verde-index icone-titulo-verde-newsletter"></span>'+
+            '</div>'+
+            '<span class="box-titulo-sombra png png"></span>'+
+            '<div class="box-conteudo-conteudo-tipo1">'+
+                '<div class="wrap box-conteudo-tipo1-texto box-conteudo-conteudo-rodaperedondo">'+
+					'<p>Cadastre-se e receba not�cias por e-mail da APRE.</p>'+
+                    '<form name="formNewsletter">'+
+                        '<div class="box-label-input1 box-label-input2">'+
+                            '<label class="label" for="mail_nome"><strong>Nome:</strong></label>'+
+                            '<div class="box-input box-busca png">'+
+                                '<div class="box-input-wrap png">'+
+                                    '<input id="mail_nome" class="input" name="cad_login" type="text" value="'+recinputNome+'" />'+
+                                '</div>'+
+                            '</div>'+
+                        '</div>'+
+                        '<div class="spacer h5"></div>'+
+                        '<div class="box-label-input1 box-label-input2 png">'+
+                            '<label class="label" for="mail_email"><strong>E-mail</strong></label>'+
+                            '<div class="box-input box-busca png">'+
+                                '<div class="box-input-wrap png">'+
+                                    '<input id="mail_email" class="input" name="cad_senha" value="'+recinputMail+'" type="text" />'+
+                                '</div>'+
+                             '</div>'+
+                        '</div>'+
+                        '<div class="spacer h5"></div>'+
+                        '<a class="bt-verde" id="btMail"><span class="bt-verde-fix"></span>CADASTRAR</a>'+
+                    '</form>'+
+                    '<div class="spacer h5"></div>'+
+                '</div>'+
+            '</div>'+
+        '</div>',
+            width:410,
+            height:350,
+            open:true,
+            iframe:false,
+            close: "fecharNews2"
+        });
+
+        btMail = $('#btMail');
+        inputNome = $("#mail_nome");
+        inputMail = $("#mail_email");
+        color = '#c04444';
+
+        $(btMail).click(function() {
+        recinputNome = '';
+        recinputMail = '';
+         cadastraMailing()
+        });
+    }
+
+     function cadastraMailing(){
+        var ajaxURL = '/_ajax/ger_mailing.php';
+
+        $.post(ajaxURL, {
+            acao: "adicionar",
+            mail_nome: ((inputNome.val() == inputNome.attr('title')) ? '' : inputNome.val()),
+            mail_email:((inputMail.val() == inputMail.attr('title')) ? '' : inputMail.val())
+        }, function(jsonReturn) {
+
+            if(jsonReturn.status == "sucesso") {
+                inputNome.val(inputNome.attr('title'));
+                inputMail.val(inputNome.attr('title'));
+                color = '#a0ce3f';
+            }else{
+                recinputNome = inputNome.val();
+                recinputMail = inputMail.val();
+            }
+
+            $.fn.colorbox({
+                html:'<div id="color-box-content"><h2 id="color-box-title">Cadastro Newsletter APRE</h2><div id="color-box-return" style="color:'+color+'">'+jsonReturn.msg+'</div><div><button id="bt-voltarFormulario" type="button" value="Voltar" title="Voltar para a listagem">&laquo; Voltar</button><div></div>',
+                width:410,
+                height:300,
+                open:true,
+                iframe:false,
+                close: "fecharNews"
+            });
+    
+            $("#bt-voltarFormulario").click(function() {
+                abreFormulario();
+            });
+
+        }, "json");}
+
+
+
+}
+
+yzoom.widget.initMailingController = initMailingController;
+
+yzoom.widget.BannerZona4 = function ()
+{
+    var tempoTroca = 3000;
+    var itens = $(".bannerZona4");
+    var slideInterval;
+    var indiceAtual = 1;
+    var totalNoticia = itens.length;
+
+    function trocar(){
+
+        itens.each(function(){
+            $(this).hide();
+        });
+
+        $("#z4Ban"+indiceAtual).show();
+
+        if(indiceAtual < totalNoticia){
+            indiceAtual++;
+        }else{
+            indiceAtual=1;
+        }
+
+    }
+
+
+    function iniciar(){
+
+        $("#z4Ban1").show();
+
+        if(indiceAtual < totalNoticia){
+            indiceAtual++;
+        }else{
+            indiceAtual=1;
+        }
+        slideInterval = setInterval(trocar, tempoTroca);
+
+    }
+
+    iniciar();
+
+}
