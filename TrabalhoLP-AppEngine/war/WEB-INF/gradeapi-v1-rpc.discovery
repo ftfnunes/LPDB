@@ -1,6 +1,6 @@
 {
  "kind": "discovery#rpcDescription",
- "etag": "\"zRMgE0l9nVDW4S28VYYcYQF9UW4/MTZ0NOOkPYdAL-RKwKYZIdx8iSc\"",
+ "etag": "\"zRMgE0l9nVDW4S28VYYcYQF9UW4/KU5yzgS6WoMP_j3LWNcVXgEGh5A\"",
  "discoveryVersion": "v1",
  "id": "gradeapi:v1",
  "name": "gradeapi",
@@ -11,8 +11,8 @@
   "x32": "http://www.google.com/images/icons/product/search-32.gif"
  },
  "protocol": "rpc",
- "rootUrl": "https://TrabalhoLP.appspot.com/_ah/api/",
- "rpcUrl": "https://TrabalhoLP.appspot.com/_ah/api/rpc",
+ "rootUrl": "https://trabalholp-1342.appspot.com/_ah/api/",
+ "rpcUrl": "https://trabalholp-1342.appspot.com/_ah/api/rpc",
  "rpcPath": "/_ah/api/rpc",
  "parameters": {
   "alt": {

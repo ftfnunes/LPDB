@@ -8,9 +8,9 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.appspot.trabalholp.gradeapi.Gradeapi;
-import com.appspot.trabalholp.gradeapi.model.Avaliacao;
-import com.appspot.trabalholp.gradeapi.model.Nota;
+import com.appspot.trabalholp_1342.gradeapi.Gradeapi;
+import com.appspot.trabalholp_1342.gradeapi.model.Avaliacao;
+import com.appspot.trabalholp_1342.gradeapi.model.Nota;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.json.gson.GsonFactory;
 
@@ -109,7 +109,7 @@ public class MainActivity extends Activity {
         	return resultado;
         }
 
-        protected void onPostExecute() {
+        protected void onPostExecute(Nota nota) {
                 //Clear the progress dialog and the fields
                 pd.dismiss();
                 
@@ -146,8 +146,9 @@ public class MainActivity extends Activity {
         	
         	return resultado;
         }
-
-        protected void onPostExecute() {
+        
+        @Override
+        protected void onPostExecute(Avaliacao avaliacao) {
                 //Clear the progress dialog and the fields
                 pd.dismiss();
                 
